@@ -29,12 +29,14 @@ catch {
 }
 
 ## Get status of azCLI
-$tenants = Get-AzTenant #Get all tenants
-$aztenant = az account show --query tenantId -o tsv #Get current tenant for azcli
-$currentazclitenant = $tenants | Where-Object { $_.Id -eq $aztenant } #Search for tenant based on ID
 $azsub = az account show --query name -o tsv #Get current azcli subscription
+$aztenant = az account show --query tenantId -o tsv #Get current tenant for azcli
+$tenantfriendlyname = az rest --method GET --uri https://management.azure.com/tenants?api-version=2020-01-01 --query "value[?tenantId=='$aztenant'].{TenantId:tenantId, DisplayName:displayName}" --output tsv
+$splitname = $tenantfriendlyname -split "`t"
+
 
 ## Get status of PowerShell
+$tenants = Get-AzTenant
 $psstatus = get-azcontext #Get current subscription for PowerShell
 $currentpstenant = $tenants | Where-Object { $_.Id -eq $psstatus.Tenant.Id }
 
@@ -49,7 +51,7 @@ while ($termloop -ne 1) {
         write-host "Az Switcher - Main Menu" -ForegroundColor Cyan
         write-host "***********************" -ForegroundColor Cyan
         write-host ""
-        write-host "(azcli) You are connected to tenant: " -NoNewLine; write-host $currentazclitenant.Name -ForegroundColor Yellow -NoNewline; write-host " and subscription: " -noNewLine; write-host $azsub -ForegroundColor Yellow
+        write-host "(azcli) You are connected to tenant: " -NoNewLine; write-host $splitname[1] -ForegroundColor Yellow -NoNewline; write-host " and subscription: " -noNewLine; write-host $azsub -ForegroundColor Yellow
         write-host "(PowerShell) You are connected to tenant: " -NoNewLine; write-host $currentpstenant.Name -ForegroundColor Yellow -NoNewline; write-host " and subscription: " -noNewLine; write-host $psstatus.Subscription.Name -ForegroundColor Yellow
         write-host ""
         Write-Host "To change azcli, enter" -NoNewline; write-host " '1'" -ForegroundColor blue
@@ -63,6 +65,8 @@ while ($termloop -ne 1) {
             write-host "Change azcli Tenant/Subscription" -ForegroundColor Cyan
             write-host "********************************" -ForegroundColor Cyan
             write-host ""
+            write-host "You are connected to tenant: " -NoNewLine; write-host $splitname[1] -ForegroundColor Yellow -NoNewline; write-host " and subscription: " -noNewLine; write-host $azsub -ForegroundColor Yellow
+            write-host ""
             Write-Host "To change Tenant, enter" -NoNewline; write-host " '1'" -ForegroundColor blue
             Write-Host "To change Subscription, enter" -NoNewline; write-host " '2'" -ForegroundColor blue
             Write-Host "To exit to main menu, enter" -NoNewline; write-host " '0'" -ForegroundColor red
@@ -72,9 +76,10 @@ while ($termloop -ne 1) {
             if ($sbName -eq 1) {
                 #Execute the function 'azlogin'
                 azlogin
-                $aztenant = az account show --query tenantId -o tsv #Get current tenant for azcli
-                $currentazclitenant = $tenants | Where-Object { $_.Id -eq $aztenant } #Search for tenant based on ID
                 $azsub = az account show --query name -o tsv #Get current azcli subscription
+                $aztenant = az account show --query tenantId -o tsv #Get current tenant for azcli
+                $tenantfriendlyname = az rest --method GET --uri https://management.azure.com/tenants?api-version=2020-01-01 --query "value[?tenantId=='$aztenant'].{TenantId:tenantId, DisplayName:displayName}" --output tsv
+                $splitname = $tenantfriendlyname -split "`t"
             }
 
             elseif ($sbName -eq 2) {
@@ -91,6 +96,8 @@ while ($termloop -ne 1) {
             clear-host
             write-host "Change PowerShell Tenant/Subscription" -ForegroundColor Cyan
             write-host "*************************************" -ForegroundColor Cyan
+            write-host ""
+            write-host "(PowerShell) You are connected to tenant: " -NoNewLine; write-host $currentpstenant.Name -ForegroundColor Yellow -NoNewline; write-host " and subscription: " -noNewLine; write-host $psstatus.Subscription.Name -ForegroundColor Yellow
             write-host ""
             Write-Host "To change Tenant, enter" -NoNewline; write-host " '1'" -ForegroundColor blue
             Write-Host "To change Subscription, enter" -NoNewline; write-host " '2'" -ForegroundColor blue

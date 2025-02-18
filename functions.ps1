@@ -27,59 +27,53 @@ function azlogin() {
     }
     else {  
         ## Get status of azCLI
-        $tenants = Get-AzTenant #Get all tenants
-        $aztenant = az account show --query tenantId -o tsv #Get current tenant for azcli
-        $currentazclitenant = $tenants | Where-Object { $_.Id -eq $aztenant } #Search for tenant based on ID
+        clear-host
+        Write-host "During this process you will be prompted to sign in twice." -ForegroundColor Yellow
+        Write-host ""
+        write-host "The first sign-in forces a tenant change. This is useful for individuals with access to multiple tenants with different accounts." -ForegroundColor Yellow
+        write-host "The second sign-in is to authenticate the account and connect to the selected tenant." -ForegroundColor Yellow
+        Write-host ""
+        Write-host "Use an account that has access to the Tenant you wish to target" -foregroundcolor Yellow
+        Start-Sleep -Seconds 3
 
-        Write-Host "You are connected to Azure Tenant: $($currentazclitenant.Name). Do you want to change?" -ForegroundColor yellow
-        $changeTenant = Read-Host "Enter your response to continue (Y/n)"
-
-        if ($changeTenant -eq "Y") {
-            Write-Host "During this process you will be prompted to sign in twice." -ForegroundColor Yellow
-            Write-host ""
-            Write-Host "The first sign-in forces a tenant change. This is useful for individuals with access to multiple tenants with different accounts." -ForegroundColor Yellow
-            Write-Host "The second sign-in is to authenticate the account and connect to the selected tenant." -ForegroundColor Yellow
-            Write-host ""
-            Write-Host "Use an account that has access to the Tenant you wish to target" -ForegroundColor Yellow
-            Start-Sleep -Seconds 3
+        az login --only-show-errors -o none
         
-            az login --allow-no-subscriptions
-        
-            Clear-Host
-            write-host "Getting Tenants..." -ForegroundColor yellow
-            $tenants = Get-AzTenant
-            $tenantList = @()
-            $i = 1
+        Clear-Host
+        write-host "Getting Tenants..." -ForegroundColor yellow
+        $tenants = az rest --method GET --uri https://management.azure.com/tenants?api-version=2020-01-01 --query "value[].{TenantId:tenantId, DisplayName:displayName}" --output tsv
+        $tenantList = @()
+        $i = 1
 
-            foreach ($tenant in $tenants) {
-                $tenantList += @{
-                    "Number"   = $i
-                    "TenantId" = $tenant.Id
-                    "Name"     = $tenant.Name
-                }
-                write-host "$i. $($tenant.Name) | $($tenant.TenantId)"
-                $i++
+        foreach ($tenant in $tenants -split "`n") {
+            $tenantDetails = $tenant -split "`t"
+            $tenantList += @{
+                "Number"   = $i
+                "TenantId" = $tenantDetails[0]
+                "Name"     = $tenantDetails[1]
+            }
+            write-host "$i. $($tenantDetails[1]) | $($tenantDetails[0])"
+            $i++
+        }
+
+        write-host ""
+        Write-Host "Enter the number next to the tenant you wish to target"
+        Write-Host "If it is not shown in the list enter '0' to manually connect"
+        Write-host ""
+        $selectedTenant = read-host "Enter tenant index number you wish to connect to."
+        $newTenant = $tenantList[$selectedTenant - 1]
+
+        if ($newTenant) {
+            if ($selectedTenant -eq 0) {
+                $manualTenant = Read-host "Manually enter the Tenant Id you wish to connect to"
+
+                az login --tenant $manualTenant
             }
 
-            write-host ""
-            Write-Host "Enter the number next to the tenant you wish to target"
-            Write-Host "If it is not shown in the list enter '0' to manually connect"
-            Write-host ""
-            $selectedTenant = read-host "Enter tenant index number you wish to connect to."
-            $newTenant = $tenantList[$selectedTenant - 1]
-
-            if ($newTenant) {
-                if ($selectedTenant -eq 0) {
-                    $manualTenant = Read-host "Manually enter the Tenant Id you wish to connect to"
-
-                    az login --tenant $manualTenant
-                }
-
-                else {
-                    az login --tenant $newTenant.TenantId
-                }
+            else {
+                az login --tenant $newTenant.TenantId
             }
         }
+        
     }  
 } 
 
@@ -108,57 +102,53 @@ function pslogin() {
         $tenants = Get-AzTenant
         $tenants = $tenants | Where-Object { $_.Id -eq $azLoggedIn.Tenant.Id }
 
-        write-host ""
-        Write-Host "You are connected to Azure Tenant: $($tenants.Name). Do you want to change?" -ForegroundColor yellow
-        $changeTenant = Read-Host "Enter your response to continue (Y/n)"
+        clear-host
+        Write-host "During this process you will be prompted to sign in twice." -ForegroundColor Yellow
+        Write-host ""
+        write-host "The first sign-in forces a tenant change. This is useful for individuals with access to multiple tenants with different accounts." -ForegroundColor Yellow
+        write-host "The second sign-in is to authenticate the account and connect to the selected tenant." -ForegroundColor Yellow
+        Write-host ""
+        Write-host "Use an account that has access to the Tenant you wish to target" -foregroundcolor Yellow
+        Start-Sleep -Seconds 2
 
-        if ($changeTenant -eq "Y") {
-            Write-host "During this process you will be prompted to sign in twice." -ForegroundColor Yellow
-            Write-host ""
-            write-host "The first sign-in forces a tenant change. This is useful for individuals with access to multiple tenants with different accounts." -ForegroundColor Yellow
-            write-host "The second sign-in is to authenticate the account and connect to the selected tenant." -ForegroundColor Yellow
-            Write-host ""
-            Write-host "Use an account that has access to the Tenant you wish to target" -foregroundcolor Yellow
-            Start-Sleep -Seconds 3
+        Connect-AzAccount -force
 
-            Connect-AzAccount -force
+        Clear-Host
+        write-host "Getting Tenants..." -ForegroundColor yellow
+        $tenants = Get-AzTenant
+        $tenantList = @()
+        $i = 1
 
-            Clear-Host
-            write-host "Getting Tenants..." -ForegroundColor yellow
-            $tenants = Get-AzTenant
-            $tenantList = @()
-            $i = 1
-
-            foreach ($tenant in $tenants) {
-                $tenantList += @{
-                    "Number"   = $i
-                    "TenantId" = $tenant.Id
-                    "Name"     = $tenant.Name
-                }
-                write-host "$i. $($tenant.Name) | $($tenant.TenantId)"
-                $i++
+        foreach ($tenant in $tenants) {
+            $tenantList += @{
+                "Number"   = $i
+                "TenantId" = $tenant.Id
+                "Name"     = $tenant.Name
             }
-
-            write-host ""
-            Write-Host "Enter the number next to the tenant you wish to target"
-            Write-Host "If it is not shown in the list enter '0' to manually connect"
-            Write-host ""
-            $selectedTenant = read-host "Enter tenant index number you wish to connect to."
-            $newTenant = $tenantList[$selectedTenant - 1]
-
-            if ($newTenant) {
-                if ($selectedTenant -eq 0) {
-                    $manualTenant = Read-host "Manually enter the Tenant Id you wish to connect to"
-
-                    Connect-AzAccount -TenantId $manualTenant
-                }
-
-                else {
-                    connect-AzAccount -tenantId $newTenant.TenantId
-                }
-            }
-        
+            write-host "$i. $($tenant.Name) | $($tenant.TenantId)"
+            $i++
         }
+
+        write-host ""
+        Write-Host "Enter the number next to the tenant you wish to target"
+        Write-Host "If it is not shown in the list enter '0' to manually connect"
+        Write-host ""
+        $selectedTenant = read-host "Enter tenant index number you wish to connect to."
+        $newTenant = $tenantList[$selectedTenant - 1]
+
+        if ($newTenant) {
+            if ($selectedTenant -eq 0) {
+                $manualTenant = Read-host "Manually enter the Tenant Id you wish to connect to"
+
+                Connect-AzAccount -TenantId $manualTenant
+            }
+
+            else {
+                connect-AzAccount -tenantId $newTenant.TenantId
+            }
+        }
+        
+        
 
         else {
 
