@@ -39,7 +39,11 @@ $azcliinstalledcheck = Get-Command az -ErrorAction SilentlyContinue
 $psinstalledcheck = Get-Command connect-azaccount -ErrorAction SilentlyContinue
 
 if (!$azcliinstalledcheck) {
-    if (!$IsAdmin.IsInRole([System.Security.Principal.WindowsPrincipal] [System.Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object System.Security.Principal.WindowsPrincipal($currentUser)
+    $isAdmin = $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+
+    if (!$isAdmin) {
         write-host "You seem to be missing required modules, You need to run this script as an administrator on first run to install them" -ForegroundColor Red
         exit
     }
@@ -59,7 +63,7 @@ if (!$azcliinstalledcheck) {
         
             if ($installresponse -eq "y") {
                 Write-Host "Installing Azure PowerShell..." -ForegroundColor Green
-                install-azcli
+                install-azmodule
                 Write-Host "Finished. You will need to restart your terminal" -ForegroundColor Green
                 exit
             }
@@ -80,7 +84,11 @@ if (!$azcliinstalledcheck) {
 }
 
 if (!$psinstalledcheck) {
-    if (!$IsAdmin.IsInRole([System.Security.Principal.WindowsPrincipal] [System.Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object System.Security.Principal.WindowsPrincipal($currentUser)
+    $isAdmin = $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+
+    if (!$isAdmin) {
         write-host "You seem to be missing required modules, You need to run this script as an administrator on first run to install them" -ForegroundColor Red
         exit
     }
