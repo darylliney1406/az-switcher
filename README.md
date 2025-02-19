@@ -10,5 +10,7 @@ To install.
 
 
 If you want to make your life a little easier. Modify your powershell profile (run > code $PROFILE) to add the following lines. Save and reload your terminal.
+
 `Set-Alias -Name azsw -Value "C:\path\to\az-switcher.ps1"`
+
 You should now be able to run the tool by calling `azsw` or `azsw -status`
