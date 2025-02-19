@@ -39,14 +39,37 @@ $azcliinstalledcheck = Get-Command az -ErrorAction SilentlyContinue
 $psinstalledcheck = Get-Command connect-azaccount -ErrorAction SilentlyContinue
 
 if (!$azcliinstalledcheck) {
-    Write-Host "Azure CLI not found. Would you like to install?" -ForegroundColor Red
-    $installresponse = Read-Host "Press 'y' to install or any other key to exit"
+    if (!$IsAdmin.IsInRole([System.Security.Principal.WindowsPrincipal] [System.Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        write-host "You seem to be missing required modules, You need to run this script as an administrator on first run to install them" -ForegroundColor Red
+        exit
+    }
+
+    else {
+        Write-Host "Azure CLI not found. Would you like to install?" -ForegroundColor Red
+        $installresponse = Read-Host "Press 'y' to install or any other key to exit"
+    }
 
     if ($installresponse -eq "y") {
         Write-Host "Installing Azure CLI..." -ForegroundColor Green
         install-azcli
-        Write-Host "Finished. Please re-run the script" -ForegroundColor Green
-        exit
+
+        if (!$psinstalledcheck) {
+            Write-Host "Azure PowerShell not found. Would you like to install?" -ForegroundColor Red
+            $installresponse = Read-Host "Press 'y' to install or any other key to exit"
+        
+            if ($installresponse -eq "y") {
+                Write-Host "Installing Azure PowerShell..." -ForegroundColor Green
+                install-azcli
+                Write-Host "Finished. You will need to restart your terminal" -ForegroundColor Green
+                exit
+            }
+        
+            else {
+                Write-Host "Exiting..." -ForegroundColor Red
+                exit
+            }
+            exit
+        }
     }
 
     else {
@@ -57,13 +80,20 @@ if (!$azcliinstalledcheck) {
 }
 
 if (!$psinstalledcheck) {
-    Write-Host "Azure PowerShell not found. Would you like to install?" -ForegroundColor Red
-    $installresponse = Read-Host "Press 'y' to install or any other key to exit"
+    if (!$IsAdmin.IsInRole([System.Security.Principal.WindowsPrincipal] [System.Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        write-host "You seem to be missing required modules, You need to run this script as an administrator on first run to install them" -ForegroundColor Red
+        exit
+    }
+
+    else {
+        Write-Host "Azure PowerShell not found. Would you like to install?" -ForegroundColor Red
+        $installresponse = Read-Host "Press 'y' to install or any other key to exit"
+    }
 
     if ($installresponse -eq "y") {
         Write-Host "Installing Azure PowerShell..." -ForegroundColor Green
         install-azcli
-        Write-Host "Finished. Please re-run the script" -ForegroundColor Green
+        Write-Host "Finished. You will need to restart your terminal" -ForegroundColor Green
         exit
     }
 

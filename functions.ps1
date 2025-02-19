@@ -3,7 +3,7 @@ function install-azcli {
     if (!$azcli) {
         Write-Host "Azure CLI is not installed. Installing now." -ForegroundColor Yellow
         $azcli = Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile $env:TEMP\AzureCLI.msi
-        Start-Process -Wait -FilePath msiexec -ArgumentList /i, $env:TEMP\AzureCLI.msi, /quiet
+        Start-Process -Wait -FilePath msiexec.exe -ArgumentList "/i `"$env:TEMP\AzureCLI.msi`" /quiet"
         Write-Host "Azure CLI has been installed." -ForegroundColor Green
     }
     else {
