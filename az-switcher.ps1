@@ -35,17 +35,44 @@ if ($status) {
     exit
 }
 
-## Get status of azCLI
-# $azsub = az account show --query name -o tsv #Get current azcli subscription
-# $aztenant = az account show --query tenantId -o tsv #Get current tenant for azcli
-# $tenantfriendlyname = az rest --method GET --uri https://management.azure.com/tenants?api-version=2020-01-01 --query "value[?tenantId=='$aztenant'].{TenantId:tenantId, DisplayName:displayName}" --output tsv
-# $splitname = $tenantfriendlyname -split "`t"
+$azcliinstalledcheck = Get-Command az -ErrorAction SilentlyContinue
+$psinstalledcheck = Get-Command connect-azaccount -ErrorAction SilentlyContinue
 
+if (!$azcliinstalledcheck) {
+    Write-Host "Azure CLI not found. Would you like to install?" -ForegroundColor Red
+    $installresponse = Read-Host "Press 'y' to install or any other key to exit"
 
-# ## Get status of PowerShell
-# $tenants = Get-AzTenant
-# $psstatus = get-azcontext #Get current subscription for PowerShell
-# $currentpstenant = $tenants | Where-Object { $_.Id -eq $psstatus.Tenant.Id }
+    if ($installresponse -eq "y") {
+        Write-Host "Installing Azure CLI..." -ForegroundColor Green
+        install-azcli
+        Write-Host "Finished. Please re-run the script" -ForegroundColor Green
+        exit
+    }
+
+    else {
+        Write-Host "Exiting..." -ForegroundColor Red
+        exit
+    }
+    exit
+}
+
+if (!$psinstalledcheck) {
+    Write-Host "Azure PowerShell not found. Would you like to install?" -ForegroundColor Red
+    $installresponse = Read-Host "Press 'y' to install or any other key to exit"
+
+    if ($installresponse -eq "y") {
+        Write-Host "Installing Azure PowerShell..." -ForegroundColor Green
+        install-azcli
+        Write-Host "Finished. Please re-run the script" -ForegroundColor Green
+        exit
+    }
+
+    else {
+        Write-Host "Exiting..." -ForegroundColor Red
+        exit
+    }
+    exit
+}
 
 ## Set termloop variable to 0
 $termloop = 0

@@ -1,3 +1,28 @@
+function install-azcli {
+    $azcli = Get-Command az -ErrorAction SilentlyContinue
+    if (!$azcli) {
+        Write-Host "Azure CLI is not installed. Installing now." -ForegroundColor Yellow
+        $azcli = Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile $env:TEMP\AzureCLI.msi
+        Start-Process -Wait -FilePath msiexec -ArgumentList /i, $env:TEMP\AzureCLI.msi, /quiet
+        Write-Host "Azure CLI has been installed." -ForegroundColor Green
+    }
+    else {
+        Write-Host "Azure CLI is already installed." -ForegroundColor Green
+    }
+}
+
+function install-azmodule {
+    $azmodule = Get-Module -ListAvailable -Name Az -ErrorAction SilentlyContinue
+    if (!$azmodule) {
+        Write-Host "Azure PowerShell module is not installed. Installing now." -ForegroundColor Yellow
+        Install-Module -Name Az -AllowClobber -Force -Scope CurrentUser
+        Write-Host "Azure PowerShell module has been installed." -ForegroundColor Green
+    }
+    else {
+        Write-Host "Azure PowerShell module is already installed." -ForegroundColor Green
+    }
+}
+
 #Function to check if user is logged in to Azure - Borrowed from Koko's script
 function azlogin() {  
     $context = az account show --output json 2>&1 
