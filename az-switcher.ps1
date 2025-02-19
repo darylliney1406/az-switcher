@@ -1,15 +1,17 @@
+param (
+    [switch]$status
+)
+
 ## Pre-requisites
-#Load the required functions
+## Load the required functions
 try {
-    # Dot source functions.ps1
-    Write-Host "Locating and loading required functions... Please wait" -ForegroundColor Green
+    ## Dot source functions.ps1
     . "$PSScriptRoot/functions.ps1"
 
     $functionCheck = Get-Command -Name pslogin, azlogin -CommandType Function -ErrorAction Stop
     
-    # Check if the function exists
+    ## Check if the function exists
     if ($functionCheck) {
-        Write-Host "Functions have been found. Continuing..." -ForegroundColor Green
     } 
         
     else {
@@ -28,22 +30,27 @@ catch {
     exit
 }
 
+if ($status) {
+    az-status
+    exit
+}
+
 ## Get status of azCLI
-$azsub = az account show --query name -o tsv #Get current azcli subscription
-$aztenant = az account show --query tenantId -o tsv #Get current tenant for azcli
-$tenantfriendlyname = az rest --method GET --uri https://management.azure.com/tenants?api-version=2020-01-01 --query "value[?tenantId=='$aztenant'].{TenantId:tenantId, DisplayName:displayName}" --output tsv
-$splitname = $tenantfriendlyname -split "`t"
+# $azsub = az account show --query name -o tsv #Get current azcli subscription
+# $aztenant = az account show --query tenantId -o tsv #Get current tenant for azcli
+# $tenantfriendlyname = az rest --method GET --uri https://management.azure.com/tenants?api-version=2020-01-01 --query "value[?tenantId=='$aztenant'].{TenantId:tenantId, DisplayName:displayName}" --output tsv
+# $splitname = $tenantfriendlyname -split "`t"
 
 
-## Get status of PowerShell
-$tenants = Get-AzTenant
-$psstatus = get-azcontext #Get current subscription for PowerShell
-$currentpstenant = $tenants | Where-Object { $_.Id -eq $psstatus.Tenant.Id }
+# ## Get status of PowerShell
+# $tenants = Get-AzTenant
+# $psstatus = get-azcontext #Get current subscription for PowerShell
+# $currentpstenant = $tenants | Where-Object { $_.Id -eq $psstatus.Tenant.Id }
 
-#Set termloop variable to 0
+## Set termloop variable to 0
 $termloop = 0
 
-#Main loop
+## Main loop
 while ($termloop -ne 1) {
 
     try {
@@ -51,8 +58,9 @@ while ($termloop -ne 1) {
         write-host "Az Switcher - Main Menu" -ForegroundColor Cyan
         write-host "***********************" -ForegroundColor Cyan
         write-host ""
-        write-host "(azcli) You are connected to tenant: " -NoNewLine; write-host $splitname[1] -ForegroundColor Yellow -NoNewline; write-host " and subscription: " -noNewLine; write-host $azsub -ForegroundColor Yellow
-        write-host "(PowerShell) You are connected to tenant: " -NoNewLine; write-host $currentpstenant.Name -ForegroundColor Yellow -NoNewline; write-host " and subscription: " -noNewLine; write-host $psstatus.Subscription.Name -ForegroundColor Yellow
+        ## Call az-status function
+        az-status
+
         write-host ""
         Write-Host "To change azcli, enter" -NoNewline; write-host " '1'" -ForegroundColor blue
         Write-Host "To change PowerShell, enter" -NoNewline; write-host " '2'" -ForegroundColor blue
@@ -60,12 +68,11 @@ while ($termloop -ne 1) {
         write-host ""
         $sbName = Read-Host "Select an option to continue"
     
+        ## Azcli menu
         if ($sbName -eq 1) {
             clear-host
             write-host "Change azcli Tenant/Subscription" -ForegroundColor Cyan
             write-host "********************************" -ForegroundColor Cyan
-            write-host ""
-            write-host "You are connected to tenant: " -NoNewLine; write-host $splitname[1] -ForegroundColor Yellow -NoNewline; write-host " and subscription: " -noNewLine; write-host $azsub -ForegroundColor Yellow
             write-host ""
             Write-Host "To change Tenant, enter" -NoNewline; write-host " '1'" -ForegroundColor blue
             Write-Host "To change Subscription, enter" -NoNewline; write-host " '2'" -ForegroundColor blue
@@ -74,7 +81,7 @@ while ($termloop -ne 1) {
             $sbName = Read-Host "Select an option to continue"
 
             if ($sbName -eq 1) {
-                #Execute the function 'azlogin'
+                ## Execute the function 'azlogin'
                 azlogin
                 $azsub = az account show --query name -o tsv #Get current azcli subscription
                 $aztenant = az account show --query tenantId -o tsv #Get current tenant for azcli
@@ -83,21 +90,17 @@ while ($termloop -ne 1) {
             }
 
             elseif ($sbName -eq 2) {
-                #Execute the function 'get-subscription'
+                ## Execute the function 'get-subscription'
                 Write-host "Function currently unavailable. Please select option 1 to change subscription" -ForegroundColor Red
                 pause
             }
         }
 
+        ## Powershell menu
         elseif ($sbName -eq 2) {
-            #Execute the function 'pslogin'
-            #$azContext = pslogin
-
             clear-host
             write-host "Change PowerShell Tenant/Subscription" -ForegroundColor Cyan
             write-host "*************************************" -ForegroundColor Cyan
-            write-host ""
-            write-host "(PowerShell) You are connected to tenant: " -NoNewLine; write-host $currentpstenant.Name -ForegroundColor Yellow -NoNewline; write-host " and subscription: " -noNewLine; write-host $psstatus.Subscription.Name -ForegroundColor Yellow
             write-host ""
             Write-Host "To change Tenant, enter" -NoNewline; write-host " '1'" -ForegroundColor blue
             Write-Host "To change Subscription, enter" -NoNewline; write-host " '2'" -ForegroundColor blue
@@ -106,7 +109,7 @@ while ($termloop -ne 1) {
             $sbName = Read-Host "Select an option to continue"
 
             if ($sbName -eq 1) {
-                #Execute the function 'pslogin'
+                ## Execute the function 'pslogin'
                 pslogin
                 $psstatus = get-azcontext
                 $tenants = Get-AzTenant
@@ -114,7 +117,7 @@ while ($termloop -ne 1) {
             }
 
             elseif ($sbName -eq 2) {
-                #Execute the function 'get-subscription'
+                ## Execute the function 'get-subscription'
                 get-subscription -tenantId $psstatus.Tenant.Id
                 $psstatus = get-azcontext
                 $tenants = Get-AzTenant
