@@ -63,7 +63,7 @@ if (!$azcliinstalledcheck) {
         
             if ($installresponse -eq "y") {
                 Write-Host "Installing Azure PowerShell..." -ForegroundColor Green
-                install-azcli
+                install-azmodule
                 Write-Host "Finished. You will need to restart your terminal" -ForegroundColor Green
                 exit
             }
