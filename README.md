@@ -9,7 +9,7 @@ To install.
 3. run `.\az-switcher.ps1 -status` to get a quick connection status
 
 
-If you want to make your life a little easier. Modify your powershell profile (run > code $PROFILE) to add the following lines. Save and reload your terminal.
+If you want to make your life a little easier. Modify your powershell profile (run > `code $PROFILE`) to add the following lines. Save and reload your terminal.
 
 `Set-Alias -Name azsw -Value "C:\path\to\az-switcher.ps1"`
 
