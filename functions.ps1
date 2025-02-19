@@ -168,6 +168,22 @@ function pslogin() {
     
 }
 
+function az-status {
+    ## Get status of azCLI
+    $azsub = az account show --query name -o tsv #Get current azcli subscription
+    $aztenant = az account show --query tenantId -o tsv #Get current tenant for azcli
+    $tenantfriendlyname = az rest --method GET --uri https://management.azure.com/tenants?api-version=2020-01-01 --query "value[?tenantId=='$aztenant'].{TenantId:tenantId, DisplayName:displayName}" --output tsv
+    $splitname = $tenantfriendlyname -split "`t"
+
+    ## Get status of PowerShell
+    $tenants = Get-AzTenant
+    $psstatus = get-azcontext #Get current subscription for PowerShell
+    $currentpstenant = $tenants | Where-Object { $_.Id -eq $psstatus.Tenant.Id }
+
+    write-host "(azcli) You are connected to tenant: " -NoNewLine; write-host $splitname[1] -ForegroundColor Yellow -NoNewline; write-host " and subscription: " -noNewLine; write-host $azsub -ForegroundColor Yellow
+    write-host "(PowerShell) You are connected to tenant: " -NoNewLine; write-host $currentpstenant.Name -ForegroundColor Yellow -NoNewline; write-host " and subscription: " -noNewLine; write-host $psstatus.Subscription.Name -ForegroundColor Yellow
+}
+
 function get-subscription {
     param (
         [string]$tenantId
