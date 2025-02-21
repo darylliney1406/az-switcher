@@ -25,10 +25,12 @@ function install-azmodule {
 
 #Function to check if user is logged in to Azure - Borrowed from Koko's script
 function azlogin() {  
-    $context = az account show --output json 2>&1 
+    $context = az account show --output json 2>&1
+    az config set core.login_experience_v2=off
+
     if ($context -like "*Please run 'az login'*") {  
         Write-Host "You are not logged in to Azure. Logging in now" -ForegroundColor yellow
-        az login --only-show-errors  -o none
+        az login
         $account = az account show --output json
         if ($account) {
             Write-Host "Successfully logged in to Azure." -ForegroundColor Green
