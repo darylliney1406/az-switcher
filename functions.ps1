@@ -106,82 +106,58 @@ function azlogin() {
 
 #Function to check user is logged into Azure powershell module
 function pslogin() {
+    $token = Connect-AzAccount -force
+
+    write-host $token
 
     $azLoggedIn = Get-AzContext
-    
-    if (!$azLoggedIn) {
-        Write-Host "You are not logged in to Azure Powershell. Logging in now" -ForegroundColor yellow
-        Connect-AzAccount -force
+    $tenants = Get-AzTenant
+    $tenants = $tenants | Where-Object { $_.Id -eq $azLoggedIn.Tenant.Id }
 
-        $azLoggedIn = Get-AzContext
-        
-        if ($azLoggedIn) {
-            Write-Host "Successfully logged in to Azure Powershell" -ForegroundColor Green
+    Start-Sleep -Seconds 2
+
+    Clear-Host
+    write-host "Getting Tenants..." -ForegroundColor yellow
+    $tenants = Get-AzTenant
+    $tenantList = @()
+    $i = 1
+
+    foreach ($tenant in $tenants) {
+        $tenantList += @{
+            "Number"   = $i
+            "TenantId" = $tenant.Id
+            "Name"     = $tenant.Name
         }
+        write-host "$i. $($tenant.Name) | $($tenant.TenantId)"
+        $i++
+    }
+
+    write-host ""
+    Write-Host "Enter the number next to the tenant you wish to target"
+    Write-Host "If it is not shown in the list enter '0' to manually connect"
+    Write-host ""
+    $selectedTenant = read-host "Enter tenant index number you wish to connect to."
+    $newTenant = $tenantList[$selectedTenant - 1]
+
+    if ($newTenant) {
+        if ($selectedTenant -eq 0) {
+            $manualTenant = Read-host "Manually enter the Tenant Id you wish to connect to"
+
+            Connect-AzAccount -TenantId $manualTenant
+        }
+
         else {
-            Write-Host "Login failed. Exiting." -ForegroundColor Red
-            Break
+            connect-AzAccount -tenantId $newTenant.TenantId
         }
     }
-    
+        
+        
+
     else {
-        $azLoggedIn = Get-AzContext
-        $tenants = Get-AzTenant
-        $tenants = $tenants | Where-Object { $_.Id -eq $azLoggedIn.Tenant.Id }
-
-        clear-host
-        Write-host "During this process you will be prompted to sign in twice." -ForegroundColor Yellow
-        Write-host ""
-        write-host "The first sign-in forces a tenant change. This is useful for individuals with access to multiple tenants with different accounts." -ForegroundColor Yellow
-        write-host "The second sign-in is to authenticate the account and connect to the selected tenant." -ForegroundColor Yellow
-        Write-host ""
-        Write-host "Use an account that has access to the Tenant you wish to target" -foregroundcolor Yellow
-        Start-Sleep -Seconds 2
-
-        Connect-AzAccount -force
-
-        Clear-Host
-        write-host "Getting Tenants..." -ForegroundColor yellow
-        $tenants = Get-AzTenant
-        $tenantList = @()
-        $i = 1
-
-        foreach ($tenant in $tenants) {
-            $tenantList += @{
-                "Number"   = $i
-                "TenantId" = $tenant.Id
-                "Name"     = $tenant.Name
-            }
-            write-host "$i. $($tenant.Name) | $($tenant.TenantId)"
-            $i++
-        }
-
-        write-host ""
-        Write-Host "Enter the number next to the tenant you wish to target"
-        Write-Host "If it is not shown in the list enter '0' to manually connect"
-        Write-host ""
-        $selectedTenant = read-host "Enter tenant index number you wish to connect to."
-        $newTenant = $tenantList[$selectedTenant - 1]
-
-        if ($newTenant) {
-            if ($selectedTenant -eq 0) {
-                $manualTenant = Read-host "Manually enter the Tenant Id you wish to connect to"
-
-                Connect-AzAccount -TenantId $manualTenant
-            }
-
-            else {
-                connect-AzAccount -tenantId $newTenant.TenantId
-            }
-        }
-        
-        
-
-        else {
-
-        }
 
     }
+
+    
 
     $azLoggedIn = Get-AzContext
     $tenants = Get-AzTenant
@@ -245,7 +221,6 @@ function get-subscription {
             write-host $manualSub
 
             Set-AzContext -Subscription $manualSub
-            pause
         }
 
         else {
